@@ -1,0 +1,62 @@
+.dash_section {
+    padding-top: 20px;
+
+    .header_panel {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: center;
+
+        .header_right_panel {
+            position: relative;
+    
+            .searchIcon {
+                position: absolute;
+                width: 25px;
+                left: 20px;
+                top: 7px;
+            }
+            .inputCustom {
+                padding-left: 40px;
+                border-radius: 50px;
+            }
+        }
+    }
+
+    .login_panel {
+        padding-top: 10px;
+        .login_left_panel {
+            display: flex;
+            flex-direction: row;
+        }
+        .login_right_panel {
+            display: flex;
+            flex-direction: row;
+        }
+    }
+
+    .main_panel {
+        display: flex;
+        flex-direction: row;
+        gap: 20px;
+        .tree_panel {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .metacard_panel {
+            .card {
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+
+                p {
+                    font-weight: 500;
+                    font-size: 17px;
+                    margin-left: 10px;
+                }
+            }
+        }
+    }
+}
