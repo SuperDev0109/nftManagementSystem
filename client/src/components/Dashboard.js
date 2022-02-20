@@ -5,16 +5,24 @@ import $ from 'jquery';
 import '../assets/dist/jstree';
 import { useSelector, useDispatch } from 'react-redux';
 import { getTreeViewData, createTreeView, updateTreeView, deleteTreeView, setParentNodeID } from '../actions/treeview';
+import { Link, Navigate } from 'react-router-dom';
+import { logout } from '../actions/auth';
 
 const Dashboard = () => {
+    let deletedItems = [];
+    let tempSelectedItems = [];
     const dispatch = useDispatch();
     const { treeview } = useSelector(state => state.treeview);
+    const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+    const { name } = useSelector((state) => state.auth.user)
 
-    const [displayContent, setDisplayContent] = useState();
+    const [displayContent, setDisplayContent] = useState("Empty NFT");
 
     useEffect(async () => {
-        setTreeviewData(await dispatch(getTreeViewData()));
+        setTreeviewData( await dispatch(getTreeViewData()));
     }, []);
+
+
 
     const setTreeviewData = async (data) => {
         $('#jstree_demo').jstree({
@@ -51,7 +59,8 @@ const Dashboard = () => {
             onUpdateTreeview({ id: data.node.original.id, text: data.node.text, is_child: data.node.original.childrenHas, parentID:  data.node.original.parentID});
             
         }).on('delete_node.jstree', function(e, data) {
-            onDeleteTreeview({ id: data.node.original.id, text: data.node.text, is_child: data.node.original.childrenHas, parentID:  data.node.original.parentID});
+            var len = $('#jstree_demo').jstree('get_selected');
+            onDeleteTreeview({ id: data.node.original.id, text: data.node.text, is_child: data.node.original.childrenHas, parentID:  data.node.original.parentID, length: len.length });
         }).on('select_node.jstree', function(e, data) {
             if (data.node.original.parentID == '#') {
                 onSetParentNodeID(data.node.original.id);
@@ -70,12 +79,35 @@ const Dashboard = () => {
 
     const onUpdateTreeview = async (data) => {
         await dispatch(updateTreeView(data));
+        data.is_child ? displayImg(data.id): displayImg(data.parentID);
         // onRefresh();
     }
 
     const onDeleteTreeview = async (data) => {
         // console.log(data);
+        tempSelectedItems.push(data.length);
+        deletedItems.push(data);
+
+        if (tempSelectedItems[0]+1 == deletedItems.length) {
+            onDeleteTreeviewAction(deletedItems);
+            tempSelectedItems = [];
+            deletedItems = [];
+        }
+    }
+
+    const onDeleteTreeviewAction = async (data) => {
+        // console.log(data);
         await dispatch(deleteTreeView(data));
+        data[0].is_child ? displayImg(data[0].id): displayImg(data[0].parentID);
+        if (data.length == 1 && data[0].parentID == '#') {
+            await dispatch(setParentNodeID(''));
+        } else {
+            if (data[0].is_child) {
+                await dispatch(setParentNodeID(data[0].id));
+            } else {
+                await dispatch(setParentNodeID(data[0].parentID));
+            }
+        }
     }
 
     const onSetParentNodeID = async (data) => {
@@ -89,26 +121,37 @@ const Dashboard = () => {
     }
 
     const displayImg = async (parentID) => {
-        console.log(parentID);
+        // console.log(parentID);
         const data = await dispatch(getTreeViewData());
-        let selectedIndex = '';
+        let selectedIndex = -1, tempData;
         for(var i = 0; i < data.length; i++) {
             if (data[i].id == parentID) {
                 selectedIndex = i;
                 break;
             }
         }
-
-        console.log(data[selectedIndex].children);
-        let tempData = data[selectedIndex].children.map((item, index) => (
-            <div className='col-md-3' key={item.id}>
-                <div className='card'>
-                    <img src={`upload/${item.img_url}`} width="100%" height="250px" />
-                    <p>{ item.text }</p>
+        if (selectedIndex == -1) {
+            tempData = <p>Empty NFT</p>
+        } else {
+            tempData = data[selectedIndex].children.map((item, index) => (
+                <div className='col-md-3' key={item.id} style={{ marginBottom: '10px' }}>
+                    <div className='card'>
+                        <img src={`upload/${item.img_url}`} width="100%" height="250px" />
+                        <p>{ item.text }</p>
+                    </div>
                 </div>
-            </div>
-        ))
+            ))
+        }
+
         setDisplayContent(tempData);
+    }
+
+    const onLogout = () => {
+        dispatch(logout());
+    }
+
+    if (!isAuthenticated) {
+        return <Navigate to="/login" />
     }
 
     return (
@@ -141,15 +184,24 @@ const Dashboard = () => {
 
                     {/* login panel start */}
                     <div className='row login_panel'>
-                        <div className='col-md-3 login_left_panel'>
-                            <p className='title1'>Login | &nbsp;</p>
-                            <p className='title1'>Jason | &nbsp;</p>
-                            <p className='title1'>Logout  </p>
+                        <div className='col-md-3 login_left_panel' style={{ paddingLeft: '25px' }}>
+                            { isAuthenticated ? (
+                                <>
+                                    <p>{ name } | &nbsp;</p>
+                                    <p onClick={onLogout} style={{ textDecoration: 'none', color: '#000', cursor: 'pointer' }} className='title1'>Logout </p>&nbsp; 
+                                </>
+                            ) : (
+                                <><Link to="/login" style={{ textDecoration: 'none', color: '#000' }}><p className='title1'>Login </p></Link>&nbsp; | &nbsp;
+                                <Link to="/register" style={{ textDecoration: 'none', color: '#000' }}><p className='title1'>Sign Up </p></Link>&nbsp; | &nbsp;</>
+                            )}
+                            
+                            {/* <p className='title1'>Jason | &nbsp;</p>
+                            <p className='title1'>Logout  </p> */}
                         </div>
-                        <div className='col-md-9 login_right_panel'>
+                        {/* <div className='col-md-9 login_right_panel'>
                             <p className='title2'>Your files &gt; &nbsp;</p>
                             <p className='title2'>CONTACTAP_TEMPLATES</p>
-                        </div>
+                        </div> */}
                     </div>
                     {/* login panel end */}
 

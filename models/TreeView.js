@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const TreeViewSchema = new Schema({
+  owner: {
+    type: String,
+    required: true
+  },
   text: {
     type: String,
     required: true

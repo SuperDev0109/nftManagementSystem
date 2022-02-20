@@ -3,6 +3,9 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const fileUpload = require('express-fileupload');
 const TreeView = require('./models/TreeView');
+const md5 = require('md5');
+
+const auth = require('./middleware/auth');
 
 const bodyParser = require('body-parser');
 
@@ -25,7 +28,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //Init Middleware
 app.use(express.json());
 
-app.post('/upload', async (req, res) => {
+app.post('/upload', auth,  async (req, res) => {
     var parentID = req.body.parentNodeID;
     if(req.files === null) {
       return res.status(400).json({msg: 'No file was uploaded'});
@@ -36,6 +39,14 @@ app.post('/upload', async (req, res) => {
   
     for(var i = 0; i < files.length; i++){
       var file = files[i];
+      // file.name = file.name.replace(/\s/g, '');
+      //hash image name
+      let tempHashName = md5(Date.now());
+      //hash image name end
+      //file extension
+      let tempFileExt = file.name.substring(file.name.lastIndexOf('.')+1, file.name.length) || file.name;
+      //file extension end
+
       //Treeview file add
       try {
         const root = await TreeView.findById(parentID);
@@ -45,8 +56,8 @@ app.post('/upload', async (req, res) => {
             text: file.name,
             selected: false,
             icon: 'jstree-file',
-            url: `${__dirname}/client/public/upload/${file.name}`,
-            img_url: `${file.name}`
+            url: `${__dirname}/client/public/upload/${tempHashName}.${tempFileExt}`,
+            img_url: `${tempHashName}.${tempFileExt}`
           },
         );
       await root.save();
@@ -55,7 +66,8 @@ app.post('/upload', async (req, res) => {
         res.status(500).send('Server Error');
       }
       //Treeview file add end
-      file.mv(`${__dirname}/client/public/upload/${file.name}`, err => {
+
+      file.mv(`${__dirname}/client/public/upload/${tempHashName}.${tempFileExt}`, err => {
         if(err) {
           console.error(err);
           return res.status(500).send(err);

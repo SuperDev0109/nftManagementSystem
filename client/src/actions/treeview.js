@@ -33,7 +33,7 @@ export const updateTreeView = (data) => async dispatch => {
 
   export const deleteTreeView = (data) => async dispatch => {
     try {
-      const res = await api.post('/treeview/delete', data);
+      const res = await api.post('/treeview/delete', {data});
   
       dispatch({
         type: 'get_treeview',
@@ -61,7 +61,6 @@ export const getTreeViewData = () => async dispatch => {
             var tempJson = {id: '', text: '', state: '', children: [], childrenHas: '', parentID: ''};
             tempJson.id = rowData._id;
             tempJson.text = rowData.text;
-            console.log(rowData.opened);
             tempJson.state = { "opened": rowData.opened };
             tempJson.childrenHas = true;
             tempJson.parentID = '#';

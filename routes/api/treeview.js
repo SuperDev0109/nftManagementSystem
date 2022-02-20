@@ -4,9 +4,11 @@ const { check, validationResult } = require("express-validator");
 const TreeView = require('../../models/TreeView');
 const fs = require('fs');
 
-router.get("/", async (req, res) => {
+const auth = require('../../middleware/auth');
+
+router.get("/", auth, async (req, res) => {
   try {
-    const data = await TreeView.find();
+    const data = await TreeView.find({ owner: req.user.id }).sort({date: 1});
     res.json(data);
   } catch (err) {
     console.error(err.message);
@@ -14,9 +16,10 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => {
+router.post("/", auth,async (req, res) => {
     try {
         treeview = new TreeView({
+            owner: req.user.id,
             text: 'New Collection',
             opened: false,
             children: [],
@@ -30,7 +33,6 @@ router.post("/", async (req, res) => {
       res.status(500).send("Server Error");
     }
   });
-
 
   router.post("/update", async (req, res) => {
     var parentID = req.body.parentID;
@@ -70,53 +72,53 @@ router.post("/", async (req, res) => {
   });
 
   router.post("/delete", async (req, res) => {
-    var parentID = req.body.parentID;
-    if (parentID == '#') {
-        try {
-            const root = await TreeView.findById(req.body.id);
-            
-            for (var i = 0; i < root.children.length; i++) {
-                fs.unlinkSync(root.children[i].url);
-            }
-            await TreeView.findOneAndRemove({ _id: req.body.id });
-            return res.json("success");
-        } catch (err) {
-            console.error(err.message);
-            return res.status(500).send('Server Error');
-        }
-    } else {
-        try {
-            const root = await TreeView.findById(req.body.parentID);
+    var data = req.body.data;
 
-            var deleteIndex = 0;
-            
-            for(var i = 0; i < root.children.length; i++) {
-                if(root.children[i]._id == req.body.id) {
-                    deleteIndex = i;
-                    
-                    break;
+    for(var i = 0; i < data.length; i++) {
+      var node = data[i];
+      var parentID = node.parentID;
+      if (parentID == '#') {
+          try {
+              var root = await TreeView.findById(node.id);
+              if (root.children.length != 0) {
+                for (var j = 0; j < root.children.length; j++) {
+                  // fs.unlinkSync(root.children[j].url);
                 }
-            }
-            
-            fs.unlinkSync(root.children[deleteIndex].url);
-
-            root.children.splice(deleteIndex, 1);
-            // console.log(deleteIndex);
-            // console.log(root.children);
-            
-            // console.log(root.children);
-
-            // root.children = root.children.filter(
-            //     (child) => child._id.toString() !== req.body.id
-            //   );
-          
-            root.save();
-            return res.json("success");
+              }
+              await TreeView.findOneAndRemove({ _id: node.id });
+              // return res.json("success");
           } catch (err) {
-            console.error(err.message);
-            res.status(500).send('Server Error');
+              console.error(err.message);
+              return res.status(500).send('Server Error');
           }
+      } else {
+          try {
+              var root = await TreeView.findById(node.parentID);
+
+              if (root) {
+                var deleteIndex = -1;
+                for(var j = 0; j < root.children.length; j++) {
+                    if(root.children[j]._id == node.id) {
+                        deleteIndex = j;
+                        break;
+                    }
+                }
+                
+                await fs.unlinkSync(root.children[deleteIndex].url);
+                root.children.splice(deleteIndex, 1);
+                await root.save();
+              }
+
+              // return res.json("success");
+
+            } catch (err) {
+              console.error(err.message);
+              res.status(500).send('Server Error');
+            }
+      }
     }
+
+    return res.json("success");
   });
 
 module.exports = router;
