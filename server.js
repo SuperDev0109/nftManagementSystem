@@ -30,6 +30,8 @@ app.use(express.json());
 
 app.post('/upload', auth,  async (req, res) => {
     var parentID = req.body.parentNodeID;
+    var tempJson = req.body.tempJson;
+    
     if(req.files === null) {
       return res.status(400).json({msg: 'No file was uploaded'});
     }
@@ -57,7 +59,8 @@ app.post('/upload', auth,  async (req, res) => {
             selected: false,
             icon: 'jstree-file',
             url: `${__dirname}/client/public/upload/${tempHashName}.${tempFileExt}`,
-            img_url: `${tempHashName}.${tempFileExt}`
+            img_url: `${tempHashName}.${tempFileExt}`,
+            metadata: tempJson
           },
         );
       await root.save();

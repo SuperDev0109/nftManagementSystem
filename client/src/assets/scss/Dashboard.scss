@@ -42,8 +42,14 @@
         .tree_panel {
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            height: 300px;
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+        .upload_panel {
+            height: 300px;
         }
         .metacard_panel {
             .card {
@@ -60,3 +66,4 @@
         }
     }
 }
+

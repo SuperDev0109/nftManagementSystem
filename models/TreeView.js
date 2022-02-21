@@ -6,6 +6,9 @@ const TreeViewSchema = new Schema({
     type: String,
     required: true
   },
+  group: {
+    type: String, 
+  },
   text: {
     type: String,
     required: true
@@ -13,6 +16,9 @@ const TreeViewSchema = new Schema({
   opened: {
     type: Boolean
   },
+  desc: {
+    type: String,
+  }, 
   children: [
     {
       text: {
@@ -29,6 +35,9 @@ const TreeViewSchema = new Schema({
         type: String
       },
       img_url: {
+        type: String
+      }, 
+      metadata: {
         type: String
       }
     }

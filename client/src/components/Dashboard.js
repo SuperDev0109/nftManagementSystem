@@ -69,6 +69,9 @@ const Dashboard = () => {
                 onSetParentNodeID(data.node.original.parentID);
                 displayImg(data.node.original.parentID);
             }
+        }).on('create_node.jstree', async function(data) {
+            // onUpdateTreeview({ id: data.node.original.id, text: data.node.text, is_child: data.node.original.childrenHas, parentID:  data.node.original.parentID});
+            alert('sdf');
         });
     }
 
@@ -137,7 +140,7 @@ const Dashboard = () => {
                 <div className='col-md-3' key={item.id} style={{ marginBottom: '10px' }}>
                     <div className='card'>
                         <img src={`upload/${item.img_url}`} width="100%" height="250px" />
-                        <p>{ item.text }</p>
+                        <p>{ item.text.slice(0,5).concat('...') }</p>
                     </div>
                 </div>
             ))
@@ -209,8 +212,8 @@ const Dashboard = () => {
                         <div className='col-md-3'>
                             <div className='row tree_panel'>
                                 <div id="jstree_demo" className="demo"></div>
-                                <button type="button" className="btn btn-primary" onClick={onCreateTreeview} style={{ width: '95%', marginTop: '20px' }}>Create</button>
                             </div>
+                            <button type="button" className="btn btn-primary" onClick={() => onCreateTreeview()} style={{ width: '95%', marginTop: '20px' }}>Create</button>
                             <div className='row upload_panel'>
                                 <FileUpload />
                             </div>
